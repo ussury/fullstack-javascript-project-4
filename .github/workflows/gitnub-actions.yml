@@ -1,36 +1,41 @@
-name: Node CI
+name: github-actions
 
-
+# Trigger the workflow on push or pull request
 on:
   - push
-  - pull_request
 
 jobs:
   build:
+
+    # The type of machine to run the job on
     runs-on: ubuntu-latest
 
     strategy:
+      # Node versions list
       matrix:
-        node-version: [14.x]
+        node-version: [18.x]
 
     steps:
+        # Check-out repository under GitHub workspace
+        # https://github.com/actions/checkout
       - uses: actions/checkout@v2
+        # Step's name
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+        # Configures the node version used on GitHub-hosted runners
+        # https://github.com/actions/setup-node
+        uses: actions/setup-node@v2
+        # The Node.js version to configure
         with:
           node-version: ${{ matrix.node-version }}
-      - name: npm install
-        run: |
-          make install
+          cache: 'npm'
+      - run: make install
         env:
           CI: true
-      - name: Run linter
-        run: |
-          make lint
+      - run: make lint
       - name: Test & publish code coverage
-        uses: paambaati/codeclimate-action@v2.7.4
+        uses: paambaati/codeclimate-action@v3.0.0
         env:
-          CC_TEST_REPORTER_ID: ${{ secrets.TEST_SECRET_COVERAGE }}
+          CC_TEST_REPORTER_ID: ${{secrets.CODECLIMATE_ID}}
         with:
           coverageCommand: make test-coverage
           debug: true
